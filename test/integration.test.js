@@ -13,7 +13,8 @@ test('connected run uses live matches and persists the report', async () => {
   const report = await runConnectedRegression(adapter);
   assert.equal(report.source, 'appwrite-vectorsdb');
   assert.equal(report.vectorization.method, 'deterministic-concept-v1');
-  assert.equal(report.regressionCount, 3);
+  assert.equal(report.regressionCount, 0);
+  assert.equal(report.staleExpectationCount, 3);
   assert.equal(saved, report);
 });
 

@@ -12,10 +12,21 @@ test('policy change is parsed deterministically', () => {
 test('impact selection finds explicit and semantic dependencies, not shipping', () => {
   const result = runRegression();
   assert.equal(result.selectedCount, 4);
-  assert.equal(result.regressionCount, 3);
+  assert.equal(result.regressionCount, 0);
+  assert.equal(result.staleExpectationCount, 3);
   assert.deepEqual(result.results.map(r => r.id), ['T-101', 'T-102', 'T-103', 'T-104']);
   assert.deepEqual(result.results.find(r => r.id === 'T-103').selection, ['semantic']);
   assert.equal(result.results.find(r => r.id === 'T-104').impact, 'stable');
+  assert.equal(result.results.find(r => r.id === 'T-101').impact, 'stale_expectation');
+  assert.equal(result.results.find(r => r.id === 'T-101').after.passed, true);
+});
+
+test('an answer that violates the new policy is a genuine regression', () => {
+  const result = runRegression({ agentAnswers: { 'T-101': { after: '30 days' } } });
+  assert.equal(result.regressionCount, 1);
+  assert.equal(result.staleExpectationCount, 2);
+  assert.equal(result.results.find(r => r.id === 'T-101').impact, 'regression');
+  assert.equal(result.results.find(r => r.id === 'T-101').after.expected, '14 days');
 });
 
 test('local concept vectors rank the refund FAQ above unrelated shipping', () => {

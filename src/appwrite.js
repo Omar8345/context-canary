@@ -95,7 +95,21 @@ export async function persistRun(run) {
 
 export async function listRuns() {
   const result = await request('GET', `/tablesdb/${ids.tables}/tables/${ids.runs}/rows?queries[]=${encodeURIComponent(JSON.stringify({ method: 'limit', values: [20] }))}`);
-  return result.rows.map(row => ({ id: row.$id, source: row.source, selectedCount: row.selectedCount, regressionCount: row.regressionCount, createdAt: row.createdAt }));
+  return result.rows.map(row => {
+    let staleExpectationCount = 0;
+    let classificationVersion = 1;
+    try {
+      const results = JSON.parse(row.resultsJson);
+      staleExpectationCount = results.filter(item => item.impact === 'stale_expectation').length;
+      classificationVersion = results.every(item => item.after && Object.hasOwn(item.after, 'expected')) ? 2 : 1;
+    } catch {
+      // Legacy audit rows did not track stale expectations separately.
+    }
+    return {
+      id: row.$id, source: row.source, selectedCount: row.selectedCount,
+      regressionCount: row.regressionCount, staleExpectationCount, classificationVersion, createdAt: row.createdAt
+    };
+  });
 }
 
 export { ids };

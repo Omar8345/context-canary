@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="Context Canary finds AI regression tests affected by changing knowledge.">
+  <title>Context Canary — knowledge regression testing</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <div class="shell">
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Context Canary home"><span class="brand-mark" aria-hidden="true"><i></i></span><span>CONTEXT <strong>CANARY</strong></span></a>
+      <div class="connection" id="connection"><span class="connection-dot"></span><span id="mode">Connecting to Appwrite…</span></div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow"><span>AI KNOWLEDGE QA</span><span>LIVE DEMO</span></div>
+          <h1>Change the context.<br><em>Catch what breaks.</em></h1>
+          <p>Context Canary finds tests affected by a knowledge change, replays them against both versions, and leaves an auditable trail.</p>
+          <div class="hero-actions">
+            <button id="run" class="primary" disabled><span class="button-label">Run impact analysis</span><span class="button-icon" aria-hidden="true">↗</span></button>
+            <span class="run-note">30 → 14 day return window</span>
+          </div>
+        </div>
+        <aside class="hero-panel" aria-label="Demo overview">
+          <div class="panel-label">THIS RUN</div>
+          <div class="change-number"><span>30</span><i>→</i><strong>14</strong></div>
+          <div class="change-caption">days to return an item</div>
+          <div class="panel-grid"><div><span id="suite-size">—</span><small>tests stored</small></div><div><span>2</span><small>Appwrite DBs</small></div></div>
+        </aside>
+      </section>
+
+      <section class="pipeline" aria-label="Analysis pipeline">
+        <div><span>01</span><strong>Diff context</strong><small>detect changed facts</small></div><i>→</i>
+        <div><span>02</span><strong>Find impact</strong><small>query VectorsDB</small></div><i>→</i>
+        <div><span>03</span><strong>Replay tests</strong><small>compare old vs new</small></div><i>→</i>
+        <div><span>04</span><strong>Save evidence</strong><small>write to TablesDB</small></div>
+      </section>
+
+      <section class="stage" id="context-diff" aria-labelledby="diff-title">
+        <div class="section-head"><div><span class="step">01</span><div><p>THE CHANGE</p><h2 id="diff-title">Context diff</h2></div></div><span class="pill">RETURNS POLICY</span></div>
+        <div class="diff-grid">
+          <article class="context before"><div class="context-top"><span class="state-dot"></span><strong>BEFORE</strong><span>v1 · current</span></div><p>Customers may return eligible products within <mark>30 days</mark> of delivery for a full refund. Items must be unused and include the original receipt.</p></article>
+          <div class="diff-arrow" aria-hidden="true">→</div>
+          <article class="context after"><div class="context-top"><span class="state-dot"></span><strong>AFTER</strong><span>v2 · proposed</span></div><p>Customers may return eligible products within <mark>14 days</mark> of delivery for a full refund. Items must be unused and include the original receipt.</p></article>
+        </div>
+      </section>
+
+      <section class="stage" id="impact-stage" aria-labelledby="impact-title">
+        <div class="section-head"><div><span class="step">02</span><div><p>VECTORSDB</p><h2 id="impact-title">Impact selection</h2></div></div><span class="subtle" id="selection-summary">Waiting for analysis</span></div>
+        <div class="section-intro"><p>Direct links catch known dependencies. Cosine similarity finds related tests that were never linked to this policy.</p><span class="model-note">Deterministic demo vectors + policy evaluator · returns-policy scope only</span></div>
+        <div id="impact" class="empty-state" aria-live="polite"><span class="empty-icon">⌁</span><strong>No impact analysis yet</strong><small>Run the demo to query the live vector index.</small></div>
+      </section>
+
+      <section class="stage" id="report-stage" aria-labelledby="report-title">
+        <div class="section-head"><div><span class="step">03</span><div><p>OLD VS NEW</p><h2 id="report-title">Regression report</h2></div></div><span id="count" class="count neutral" role="status" aria-live="polite">AWAITING RUN</span></div>
+        <div id="results" class="empty-state" aria-live="polite"><span class="empty-icon">✓</span><strong>Ready to replay selected tests</strong><small>Results separate stale expectations, genuine regressions, and stable behavior.</small></div>
+      </section>
+
+      <section class="stage audit-stage" aria-labelledby="audit-title">
+        <div class="section-head"><div><span class="step">04</span><div><p>TABLESDB</p><h2 id="audit-title">Audit history</h2></div></div><span class="subtle" id="history-summary">Loading saved runs…</span></div>
+        <div id="history" class="history-list" aria-live="polite"></div>
+      </section>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+      <footer><span>CONTEXT CANARY</span><span>Built with Appwrite TablesDB + VectorsDB</span></footer>
+    </main>
+  </div>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
