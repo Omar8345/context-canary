@@ -1,19 +1,47 @@
-# Context Canary
+![Context Canary — Your knowledge changed. Did your AI break?](assets/banner.svg)
 
-**Dependency-aware regression testing for changing AI knowledge.**
+# Catch the impact of changing AI knowledge
 
-When a policy changes, teams usually rerun an entire AI test suite—or miss a test whose dependency was never documented. Context Canary combines explicit dependency links with Appwrite VectorsDB similarity search to find the tests most likely to be affected, replay only those tests against the old and new context, classify the outcome, and save an audit record in TablesDB.
+**Find affected tests. Understand changed answers. Keep the evidence.**
 
-The demo follows one concrete change: a returns policy moves from **30 days to 14 days**. Context Canary selects four relevant tests from a five-test suite, including an unlinked refund FAQ found semantically, while excluding an unrelated shipping test.
+![Node.js 20+](https://img.shields.io/badge/Node.js-20%2B-233345?style=flat-square) ![Appwrite](https://img.shields.io/badge/Appwrite-VectorsDB%20%2B%20TablesDB-233345?style=flat-square) ![MCP](https://img.shields.io/badge/MCP-local%20stdio-233345?style=flat-square)
 
-## What the demo proves
+Your knowledge changed. Your test suite didn't.
 
-- **VectorsDB performs the impact search.** Test intents are stored as 768-dimensional vectors and queried through an HNSW cosine index. The UI displays the real `$distance` values returned by Appwrite.
-- **TablesDB is the system of record.** It stores the structured regression suite and every completed analysis run.
-- **The result semantics are honest.** A correct new answer that conflicts with a legacy expectation is classified as a stale expectation—not an agent regression.
-- **Failure is explicit.** Vector-query or audit-write failures stop the run and appear in the UI; an unsaved run is never reported as successful.
+A policy update can turn yesterday's passing test into today's misleading failure. It can also affect a question nobody thought to link to that policy. Developers need to know where to look—and whether an answer is wrong or a test simply needs updating.
 
-## Result classifications
+Context Canary turns that investigation into one workflow: find affected tests, compare both context versions, explain the outcome, and keep the evidence. Use the dashboard for a visual walkthrough or the optional MCP server to bring the same analysis into an assistant's tools.
+
+**Try the demo:** a return window changes from **30 days to 14 days**. Four of five tests are selected, including an unlinked refund FAQ. Three expectations need updating, one test stays stable, and an unrelated shipping test stays out of the replay.
+
+> Hackathon MVP: one deterministic returns-policy scenario. Real Appwrite retrieval and persistence; no live LLM or general-purpose embedding model.
+
+[Run locally](#run-locally) · [Architecture](#architecture) · [MCP tools](#optional-mcp-server) · [Limitations](#deliberate-limitations)
+
+## From a changed fact to a focused review
+
+```mermaid
+flowchart LR
+  A[Knowledge changes] --> B[Find affected tests]
+  B --> C[Compare old and new answers]
+  C --> D[Explain what needs attention]
+  D --> E[Save audit evidence]
+```
+
+| What you need | What Context Canary does |
+| --- | --- |
+| Find the tests you might miss | Merges explicit dependencies with real VectorsDB cosine matches. |
+| Understand changed answers | Separates stale expectations, incorrect answers, and stable assertions. |
+| Keep review evidence | Saves completed connected runs in TablesDB before returning success. |
+| Use it from an assistant | Exposes the shared analysis and history through three local MCP tools. |
+
+## See the policy change in action
+
+![Real dashboard showing vector impact selection and stale-expectation results](assets/dashboard.png)
+
+Captured from a successful live Appwrite run. Distances shown are returned by VectorsDB; this is the deterministic returns-policy demo.
+
+### Read the result correctly
 
 | Classification | Meaning |
 | --- | --- |
@@ -23,12 +51,16 @@ The demo follows one concrete change: a returns policy moves from **30 days to 1
 
 For the included scenario, the correct result is **3 stale expectations, 0 genuine regressions, and 1 stable test**.
 
+The replay generates answers with a deterministic policy evaluator. It does not call or measure a live AI agent. The engine can classify supplied incorrect answers in automated tests, but the dashboard and MCP demo use the deterministic answers. A correct answer of “14 days” is therefore a stale-expectation finding when the stored test still expects “30 days.”
+
 ## Architecture
 
 ```mermaid
 flowchart LR
   B[Browser dashboard] -->|GET tests/history<br>POST analysis| S[Node.js server]
   S --> R[Regression runner]
+  M[Optional stdio MCP server] --> R
+  M -->|read history| T
   R -->|load suite| T[(Appwrite TablesDB)]
   R -->|cosine similarity query| V[(Appwrite VectorsDB)]
   V -->|test IDs + real distances| R
@@ -63,9 +95,13 @@ The server uses the official `node-appwrite` SDK for TablesDB reads, VectorsDB q
 ### 1. Configure the server
 
 ```bash
+git clone https://github.com/Omar8345/context-canary.git
+cd context-canary
 npm ci
 cp .env.example .env
 ```
+
+Already using a configured checkout? Skip cloning and copying `.env.example`; retain your existing private `.env`.
 
 Fill in:
 
@@ -99,7 +135,7 @@ Open [http://127.0.0.1:4173](http://127.0.0.1:4173), confirm the header says **A
 npm test
 ```
 
-The tests cover policy parsing, dependency and semantic selection, stale-expectation semantics, genuine regressions, unique Appwrite-compatible run IDs, live-adapter orchestration, persistence failures, vector-query failures, and safe Appwrite error messages.
+The tests cover policy parsing, dependency and semantic selection, classifications, run IDs, adapter orchestration, failure handling, history ordering and limits, and MCP discovery, validation, and write gates. They use deterministic fixtures and mocks; live Appwrite verification is a separate check.
 
 ### Troubleshooting
 
@@ -108,22 +144,17 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - **No vector matches:** confirm the `embeddings_cosine` index is available and that the five vector documents were seeded.
 - **Do not expose port 4173 directly:** the built-in server is a loopback-only demo server. Keep it local or place a production-grade authenticated service in front of it.
 
-## End-to-end flow
+### Retrieval and history details
 
-1. The browser requests the test suite and saved history from the local server.
-2. The server loads the suite from TablesDB.
-3. The changed context is converted into the same deterministic 768-dimensional representation used for stored test intents.
-4. VectorsDB runs a cosine similarity query and returns ranked documents with `$distance`.
-5. Explicit dependencies and vector matches below the threshold are merged.
-6. Only selected tests are replayed against v1 and v2 context.
-7. Results are classified as stale expectations, genuine regressions, or stable behavior.
-8. The complete run is persisted to TablesDB before the UI reports success.
+Test intents use 768-dimensional vectors and an HNSW cosine index. `VectorsDB.createQuery()` sends `Query.vectorCosine('embeddings', vector)`; returned `$distance` values at or below `0.35` qualify as semantic matches. Explicit dependency links are included regardless of distance. The evaluator then replays the selected tests.
+
+`TablesDB.listRows()` retrieves tests and history. History requests `Query.orderDesc('createdAt')` before `Query.limit(20)`; the dashboard displays six recent rows, while MCP accepts a limit from one to twenty. Stale-expectation counts are derived from the full result JSON saved in each audit row.
 
 ## Security and reliability
 
 - The server binds to `127.0.0.1`; it is not exposed publicly by default.
 - `.env` and server API keys are excluded from Git and never delivered to the browser.
-- Cross-origin writes are rejected.
+- Requests carrying an Origin header with a different host are rejected for analysis writes. Requests without Origin are permitted for local clients; this is not authentication.
 - Content Security Policy, frame protection, MIME sniffing protection, and restrictive browser permission headers are enabled.
 - SDK reads and vector queries have application-level timeouts that stop waiting without cancelling the underlying SDK request; the direct audit write has an abortable transport timeout. All Appwrite failures return sanitized errors instead of server response details.
 - Browser-rendered Appwrite text is escaped, dynamic classes are allow-listed, and numeric values are normalized.
@@ -135,6 +166,8 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - The replay uses a deterministic policy evaluator, not a live LLM. This isolates dependency selection and result semantics for a reliable hackathon demo.
 - The MVP contains one policy change and five tests rather than a production authoring system.
 - The dashboard is a local demo and has no authentication or multi-user isolation.
+- Test loading uses the default Appwrite page size; this five-test MVP is not a paginated large-suite runner. Stored data is expected to match the seeded schema.
+- If saving succeeds but the subsequent history refresh fails, the browser may show a failed operation even though the audit exists. Check history before manually retrying; audit writes are never automatically retried.
 - Audit rows produced before the three-state classifier are labeled as legacy alerts in the UI.
 
 ## Tech stack
@@ -144,6 +177,7 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - Appwrite TablesDB
 - Appwrite VectorsDB through the official server SDK
 - One abortable REST call for audit-row persistence, retained because the SDK exposes no request cancellation hook
+- Official MCP TypeScript SDK (`@modelcontextprotocol/server`) and Zod schemas, used from JavaScript
 
 ## Optional MCP server
 
