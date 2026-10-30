@@ -147,4 +147,18 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 
 ## Hackathon
 
+## Optional MCP server
+
+Run `npm run mcp` to expose exactly three tools over local stdio using the official TypeScript SDK (`@modelcontextprotocol/server` 2.4.0). The entry point is JavaScript, matching this repository. MCP starts separately and does not change dashboard startup.
+
+Configure your MCP host to launch `node` with the absolute path to `src/mcp.js` as its argument. The server loads the project-root `.env`, regardless of the host's working directory. Keep credentials there rather than in host configuration. stdout is reserved for protocol messages.
+
+Tools:
+
+- `analyze_knowledge_change({"scenario":"returns-window"})`: read-only Appwrite preview with selection reasons, distances, and classifications.
+- `run_regression_checks({"scenario":"returns-window","confirmAuditWrite":true})`: same shared analysis, followed by one audit write. Also requires `MCP_ALLOW_AUDIT_WRITES=true` in the server environment or `.env`. Writes are disabled by default.
+- `get_audit_history({"limit":10})`: latest summaries from the adapter's bounded 20-row history window; limit must be 1–20.
+
+Only the deterministic 30-to-14-day returns scenario is supported. Tools validate inputs and return structured JSON plus text. Operational failures return `isError: true` with sanitized messages. Audit writes are never automatically retried; after a timeout, inspect history before explicitly trying again because the server may have committed the request. Read-only annotations describe behavior; write authorization is enforced by the server-side opt-in and confirmation argument.
+
 Built for the [Appwrite Databases Hackathon](https://hackathon.appwrite.io/), October 19–31, 2026.

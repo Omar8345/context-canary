@@ -5,13 +5,16 @@
   "type": "module",
   "scripts": {
     "start": "node src/server.js",
-    "test": "node --test",
-    "setup:appwrite": "node scripts/setup-appwrite.js"
+    "test": "node --test test/*.test.js",
+    "setup:appwrite": "node scripts/setup-appwrite.js",
+    "mcp": "node src/mcp.js"
   },
   "engines": {
     "node": ">=20"
   },
   "dependencies": {
-    "node-appwrite": "31.1.0"
+    "@modelcontextprotocol/server": "2.4.0",
+    "node-appwrite": "31.1.0",
+    "zod": "4.6.7"
   }
 }
