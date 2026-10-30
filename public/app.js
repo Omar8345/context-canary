@@ -99,7 +99,9 @@ async function refreshHistory() {
 async function initialize() {
   const button = $('#run');
   try {
-    const [status, testData, historyData] = await Promise.all([getJson('/api/status'), getJson('/api/tests'), getJson('/api/runs')]);
+    const status = await getJson('/api/status');
+    const testData = await getJson('/api/tests');
+    const historyData = await getJson('/api/runs');
     tests = testData.tests;
     appwriteMode = status.mode === 'appwrite-ready';
     $('#suite-size').textContent = tests.length;

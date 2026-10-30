@@ -29,6 +29,13 @@ test('an answer that violates the new policy is a genuine regression', () => {
   assert.equal(result.results.find(r => r.id === 'T-101').after.expected, '14 days');
 });
 
+test('run IDs are collision resistant and valid Appwrite identifiers', () => {
+  const first = runRegression().runId;
+  const second = runRegression().runId;
+  assert.notEqual(first, second);
+  assert.match(first, /^[A-Za-z0-9][A-Za-z0-9._-]{0,35}$/);
+});
+
 test('local concept vectors rank the refund FAQ above unrelated shipping', () => {
   const changed = vectorize(newContext.text);
   const refund = vectorize('time limit for a full refund when an item is sent back');

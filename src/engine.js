@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { oldContext, newContext, tests, demoSemanticMatches } from './fixtures.js';
 
 export function extractPolicy(text) {
@@ -51,7 +52,7 @@ export function runRegression({ semanticMatches = demoSemanticMatches, source = 
   const regressionCount = results.filter(r => r.impact === 'regression').length;
   const staleExpectationCount = results.filter(r => r.impact === 'stale_expectation').length;
   return {
-    runId: `run-${Date.now()}`,
+    runId: `run-${Date.now().toString(36)}-${randomUUID().slice(0, 8)}`,
     source, changedDependency: 'returns-policy',
     change: { field: 'returnWindowDays', before: 30, after: 14 },
     threshold, totalTests: suite.length, selectedCount: results.length,
