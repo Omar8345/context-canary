@@ -125,7 +125,7 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - `.env` and server API keys are excluded from Git and never delivered to the browser.
 - Cross-origin writes are rejected.
 - Content Security Policy, frame protection, MIME sniffing protection, and restrictive browser permission headers are enabled.
-- SDK reads and vector queries have application-level timeouts; the direct audit write has an abortable transport timeout. All Appwrite failures return sanitized errors instead of server response details.
+- SDK reads and vector queries have application-level timeouts that stop waiting without cancelling the underlying SDK request; the direct audit write has an abortable transport timeout. All Appwrite failures return sanitized errors instead of server response details.
 - Browser-rendered Appwrite text is escaped, dynamic classes are allow-listed, and numeric values are normalized.
 - An audit write must succeed before a connected run is returned as successful.
 

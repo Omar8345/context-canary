@@ -135,7 +135,7 @@ export async function listRuns() {
   const result = await sdkCall(() => tablesDB.listRows({
     databaseId: ids.tables,
     tableId: ids.runs,
-    queries: [Query.limit(20)]
+    queries: [Query.orderDesc('createdAt'), Query.limit(20)]
   }));
   return result.rows.map(row => {
     let staleExpectationCount = 0;
