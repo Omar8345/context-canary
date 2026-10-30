@@ -1,0 +1,12 @@
+{
+  "name": "context-canary",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "setup:appwrite": "node scripts/setup-appwrite.js"
+  },
+  "engines": { "node": ">=20" }
+}
