@@ -145,8 +145,6 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - Appwrite VectorsDB through the official server SDK
 - One abortable REST call for audit-row persistence, retained because the SDK exposes no request cancellation hook
 
-## Hackathon
-
 ## Optional MCP server
 
 Run `npm run mcp` to expose exactly three tools over local stdio using the official TypeScript SDK (`@modelcontextprotocol/server` 2.4.0). The entry point is JavaScript, matching this repository. MCP starts separately and does not change dashboard startup.
@@ -160,5 +158,7 @@ Tools:
 - `get_audit_history({"limit":10})`: latest summaries from the adapter's bounded 20-row history window; limit must be 1–20.
 
 Only the deterministic 30-to-14-day returns scenario is supported. Tools validate inputs and return structured JSON plus text. Operational failures return `isError: true` with sanitized messages. Audit writes are never automatically retried; after a timeout, inspect history before explicitly trying again because the server may have committed the request. Read-only annotations describe behavior; write authorization is enforced by the server-side opt-in and confirmation argument.
+
+## Hackathon
 
 Built for the [Appwrite Databases Hackathon](https://hackathon.appwrite.io/), October 19–31, 2026.
