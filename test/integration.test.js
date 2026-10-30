@@ -38,29 +38,15 @@ test('persistence failure cannot be reported as a successful run', async () => {
   await assert.rejects(runConnectedRegression(adapter), /audit write failed/);
 });
 
-test('Appwrite errors are safe to show without exposing server responses', async () => {
-  const prior = {
-    APPWRITE_ENDPOINT: process.env.APPWRITE_ENDPOINT,
-    APPWRITE_PROJECT_ID: process.env.APPWRITE_PROJECT_ID,
-    APPWRITE_API_KEY: process.env.APPWRITE_API_KEY,
-    fetch: globalThis.fetch
-  };
-  process.env.APPWRITE_ENDPOINT = 'http://example.invalid/v1';
-  process.env.APPWRITE_PROJECT_ID = 'test-project';
-  process.env.APPWRITE_API_KEY = 'test-key';
-  try {
-    const { request } = await import('../src/appwrite.js?error-test');
-    globalThis.fetch = async () => ({ ok: false, status: 401, json: async () => ({ message: 'sensitive server detail' }) });
-    await assert.rejects(request('GET', '/tablesdb'), error =>
-      error.status === 401 && /access denied/.test(error.message) && !/sensitive/.test(error.message));
-    globalThis.fetch = async () => { throw new Error('private endpoint detail'); };
-    await assert.rejects(request('GET', '/tablesdb'), error =>
-      error.status === 503 && /Cannot reach Appwrite/.test(error.message) && !/private endpoint/.test(error.message));
-  } finally {
-    globalThis.fetch = prior.fetch;
-    for (const key of ['APPWRITE_ENDPOINT', 'APPWRITE_PROJECT_ID', 'APPWRITE_API_KEY']) {
-      if (prior[key] === undefined) delete process.env[key];
-      else process.env[key] = prior[key];
-    }
-  }
+test('Appwrite SDK errors are safe to show without exposing server responses', async () => {
+  const { normalizeAppwriteError } = await import('../src/appwrite.js');
+  const denied = normalizeAppwriteError({ code: 401, message: 'sensitive server detail' });
+  assert.equal(denied.status, 401);
+  assert.match(denied.message, /access denied/);
+  assert.doesNotMatch(denied.message, /sensitive/);
+
+  const network = normalizeAppwriteError(new Error('private endpoint detail'));
+  assert.equal(network.status, 503);
+  assert.match(network.message, /Cannot reach Appwrite/);
+  assert.doesNotMatch(network.message, /private endpoint/);
 });

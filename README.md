@@ -38,7 +38,7 @@ flowchart LR
   S --> B
 ```
 
-The server uses Appwrite's REST API directly. The API key remains server-side and is never sent to the browser.
+The server uses the official `node-appwrite` SDK for TablesDB reads, VectorsDB queries, and provisioning. The API key remains server-side and is never sent to the browser. Audit-row creation retains direct REST because the SDK does not expose an `AbortSignal` or transport timeout. This bounds the client request; a server may still commit a write it already received, so cancellation does not guarantee rollback.
 
 ### Appwrite schema
 
@@ -63,6 +63,7 @@ The server uses Appwrite's REST API directly. The API key remains server-side an
 ### 1. Configure the server
 
 ```bash
+npm ci
 cp .env.example .env
 ```
 
@@ -124,7 +125,7 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 - `.env` and server API keys are excluded from Git and never delivered to the browser.
 - Cross-origin writes are rejected.
 - Content Security Policy, frame protection, MIME sniffing protection, and restrictive browser permission headers are enabled.
-- Appwrite requests use timeouts and return sanitized errors instead of server response details.
+- SDK reads and vector queries have application-level timeouts; the direct audit write has an abortable transport timeout. All Appwrite failures return sanitized errors instead of server response details.
 - Browser-rendered Appwrite text is escaped, dynamic classes are allow-listed, and numeric values are normalized.
 - An audit write must succeed before a connected run is returned as successful.
 
@@ -138,10 +139,11 @@ The tests cover policy parsing, dependency and semantic selection, stale-expecta
 
 ## Tech stack
 
-- Node.js with no runtime dependencies
+- Node.js with the official `node-appwrite` SDK
 - Vanilla HTML, CSS, and JavaScript
 - Appwrite TablesDB
-- Appwrite VectorsDB through the server REST API
+- Appwrite VectorsDB through the official server SDK
+- One abortable REST call for audit-row persistence, retained because the SDK exposes no request cancellation hook
 
 ## Hackathon
 

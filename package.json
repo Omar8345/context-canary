@@ -8,5 +8,10 @@
     "test": "node --test",
     "setup:appwrite": "node scripts/setup-appwrite.js"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "node-appwrite": "31.1.0"
+  }
 }
