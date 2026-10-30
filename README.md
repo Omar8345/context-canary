@@ -12,6 +12,12 @@
 ![MCP](https://img.shields.io/badge/MCP-Supported-233345?style=flat-square)
 [![Repository Hits](https://hits.dwyl.com/Omar8345/context-canary.svg?style=flat-square)](https://hits.dwyl.com/Omar8345/context-canary)
 
+<p align="center">
+  <a href="https://cap.so/s/j3knryh4jqyhkpz">
+    <strong>▶ Watch the Context Canary Demo</strong>
+  </a>
+</p>
+
 **Built for the [Appwrite Databases Hackathon 2026](https://hackathon.appwrite.io/)**
 
 </div>
